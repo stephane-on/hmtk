@@ -270,29 +270,43 @@ def get_completeness_adjusted_table(catalogue, completeness, dmag, end_year):
         comp_year = completeness[iloc, 0]
         if iloc == n_comp - 1:
             idx = np.logical_and(
-                catalogue.data['magnitude'] >= low_mag - (dmag / 2.),
-                catalogue.data['year'] >= comp_year)
+                catalogue.data['magnitude'] >= low_mag,
+                catalogue.data['year'] >= comp_year - inc)
             high_mag = mag_bins[-1] + dmag
-            obs_idx = mag_bins >= (low_mag - dmag / 2.)
+            obs_idx = mag_bins >= (low_mag)
         else:
             high_mag = completeness[iloc + 1, 1]
             mag_idx = np.logical_and(
-                catalogue.data['magnitude'] >= low_mag - dmag / 2.,
+                catalogue.data['magnitude'] >= low_mag,
                 catalogue.data['magnitude'] < high_mag)
 
             idx = np.logical_and(mag_idx,
                                  catalogue.data['year'] >= comp_year - inc)
-            obs_idx = np.logical_and(mag_bins >= low_mag - dmag /2.,
-                                     mag_bins < high_mag + dmag)
+            obs_idx = np.logical_and(mag_bins >= low_mag,
+                                     mag_bins <= high_mag)
         temp_rates = np.histogram(catalogue.data['magnitude'][idx],
                                   mag_bins[obs_idx])[0]
+        print temp_rates.astype(float),obs_time[iloc]
         #print mag_bins[obs_idx], temp_rates
         temp_rates = temp_rates.astype(float) / obs_time[iloc]
-        if iloc == n_comp - 1:
-            # TODO This hack seems to fix the error in Numpy v.1.8.1
-            obs_rates[np.where(obs_idx)[0]] = temp_rates
-        else:
-            obs_rates[obs_idx[:-1]] = temp_rates
+        #if iloc == n_comp - 1:
+        #    # TODO This hack seems to fix the error in Numpy v.1.8.1
+        #    obs_rates[np.where(obs_idx)[0]] = temp_rates
+        #else:
+        obs_rates[obs_idx[:-1]] = temp_rates
+        print "completness :",iloc,completeness[iloc, 1]
+        print "search M cat between: ",low_mag,high_mag
+        print idx
+        print catalogue.data['magnitude'][idx]
+        print mag_bins[obs_idx]
+        #if len(mag_bins[obs_idx]) == 1:
+        #    print "Histo 1 bar",np.histogram(catalogue.data['magnitude'][idx],1)
+        #else:
+        #    print np.histogram(catalogue.data['magnitude'][idx],mag_bins[obs_idx])
+        print len(mag_bins[obs_idx])
+        print temp_rates
+        
+    print "Rates: ",obs_rates
     selector = np.where(obs_rates > 0.)[0]
     mag_bins = mag_bins[selector[0]:selector[-1] + 1]
     obs_rates = obs_rates[selector[0]:selector[-1] + 1]
